@@ -43,6 +43,7 @@ Querying the wazuh-alerts-* index in the Wazuh Dashboard confirmed successful in
   ```cmd
   whoami.exe /all
 ```
+
 ### 2. Custom Detection Rule Engineering
 To flag this reconnaissance activity, custom detection logic was implemented in `/var/ossec/etc/rules/local_rules.xml` on the Wazuh Manager to match Sysmon Event ID 1 process creation for `whoami.exe`:
 
