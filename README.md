@@ -4,7 +4,7 @@
 This project demonstrates the end-to-end deployment of a 3-tier Security Operations Center (SOC) home lab. The environment ingests telemetry from a Windows 10 target endpoint running Sysmon into a centralized Wazuh SIEM Manager. Adversary attacks were executed using Kali Linux to generate real-world telemetry, write custom XML detection rules mapped to the MITRE ATT&CK framework, and document incident response playbooks.
 
 ## Lab Architecture & Topology
-
+![Sysmon Telemetry Stream](soc-lab-architecture.png)
 
 * **Manager / SIEM:** Wazuh Manager 4.8 on Ubuntu 22.04 LTS (IP: 192.168.7.130)
 * **Target Endpoint:** Windows 10 Enterprise with Sysmon v15 (IP: 192.168.7.131)
@@ -28,7 +28,7 @@ The Wazuh Agent `ossec.conf` on the target machine was configured to monitor the
 
 Querying the wazuh-alerts-* index in the Wazuh Dashboard confirmed successful ingestion of Sysmon Event ID 1 (Process Creation) logs.
 
-![Sysmon Telemetry Stream]()
+![Sysmon Telemetry Stream](sysmon-raw-telemetry.png)
 
 * **Source Host:** DESKTOP-KP36OKO (192.168.7.131) via Agent ID 001
 * **Captured Metadata:** Includes image file paths, parent-child process execution trees, system user context, and SHA256 file hashes.
