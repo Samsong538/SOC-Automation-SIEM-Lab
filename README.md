@@ -11,7 +11,28 @@ This project demonstrates the end-to-end deployment of a 3-tier Security Operati
 * **Attacker Machine:** Kali Linux (IP: 192.168.7.132)
 * **Network Mode:** VMware NAT Subnet (192.168.7.0/24)
 
----
+---## Phase 2: Telemetry & Ingestion Verification
+
+Before engineering custom rules, end-to-end log ingestion was verified to ensure the Wazuh Agent on the Windows 10 target (`192.168.7.131`) was actively forwarding Sysmon operational logs to the manager over TCP port `1514`.
+
+### 1. Sysmon Event Channel Configuration
+The Wazuh Agent `ossec.conf` on the target machine was configured to monitor the native Sysmon channel:
+
+```xml
+<localfile>
+  <location>Microsoft-Windows-Sysmon/Operational</location>
+  <log_format>eventchannel</log_format>
+</localfile>
+
+### 2. Live Telemetry Stream Proof
+
+Querying the wazuh-alerts-* index in the Wazuh Dashboard confirmed successful ingestion of Sysmon Event ID 1 (Process Creation) logs.
+
+![Sysmon Telemetry Stream](images/sysmon-telemetry.png)
+
+* **Source Host:** DESKTOP-KP36OKO (192.168.7.131) via Agent ID 001
+* **Captured Metadata:** Includes image file paths, parent-child process execution trees, system user context, and SHA256 file hashes.
+* **Pipeline Status:** Verified live ingestion, confirming the telemetry pipeline was ready for rule development.
 
 ## Detection Scenario 1: Command Line Reconnaissance (`whoami`)
 
