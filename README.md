@@ -23,7 +23,7 @@ The Wazuh Agent `ossec.conf` on the target machine was configured to monitor the
   <location>Microsoft-Windows-Sysmon/Operational</location>
   <log_format>eventchannel</log_format>
 </localfile>
-
+```
 ### 2. Live Telemetry Stream Proof
 
 Querying the wazuh-alerts-* index in the Wazuh Dashboard confirmed successful ingestion of Sysmon Event ID 1 (Process Creation) logs.
