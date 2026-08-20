@@ -42,5 +42,37 @@ Querying the wazuh-alerts-* index in the Wazuh Dashboard confirmed successful in
 * **Command:**
   ```cmd
   whoami.exe /all
+```
+### 2. Custom Detection Rule Engineering
+To flag this reconnaissance activity, custom detection logic was implemented in `/var/ossec/etc/rules/local_rules.xml` on the Wazuh Manager to match Sysmon Event ID 1 process creation for `whoami.exe`:
 
-  
+```xml
+<group name="sysmon,custom_rules,">
+  <rule id="100002" level="8">
+    <if_sid>61603</if_sid> <!-- Sysmon Event ID 1 -->
+    <field name="win.eventdata.originalFileName">whoami.exe</field>
+    <description>SOC Lab: Reconnaissance Activity - whoami execution detected</description>
+    <mitre>
+      <id>T1033</id>
+    </mitre>
+  </rule>
+</group>  
+```
+### 3. Alert Verification & Dashboard Evidence
+After restarting the wazuh-manager service, running whoami /all on the target endpoint generated an immediate Level 8 Alert in the Wazuh Dashboard.
+![Wazuh Custom Alert 100002](whoami-alert.png)
+* **Triggered Rule ID: 100002
+
+* **Alert Level: 8 (High Severity Reconnaissance)
+
+* **Parent Process: powershell.exe (PID: 1880)
+
+* **Target Path: C:\Windows\System32\whoami.exe
+
+### 4. SOC Analyst Response Playbook
+
+* **Triage & Investigation: Verify the parent process spawning whoami.exe. If launched by an administrator in an interactive terminal, mark as benign activity. If spawned by a web server process (w3wp.exe), script runner, or unknown service, escalate immediately.
+
+* **Containment: If unauthorized, isolate the target host directly via the Wazuh Manager agent control to prevent lateral movement.
+
+* **Remediation: Inspect active parent process trees, terminate suspicious execution threads, and audit endpoint user accounts.
