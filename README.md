@@ -39,7 +39,7 @@ Querying the wazuh-alerts-* index in the Wazuh Dashboard confirmed successful in
 ### 1. Attack Execution (Kali / Windows Target)
 * **MITRE ATT&CK Technique:** T1033 - System Owner/User Discovery
 * **Description:** Executed local user discovery via command prompt to test endpoint visibility.
-* **Command:**
+**Command:**
   ```cmd
   whoami.exe /all
 ```
