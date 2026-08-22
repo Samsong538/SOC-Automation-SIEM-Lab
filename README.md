@@ -77,3 +77,52 @@ After restarting the wazuh-manager service, running whoami /all on the target en
 * **Containment: If unauthorized, isolate the target host directly via the Wazuh Manager agent control to prevent lateral movement.
 
 * **Remediation: Inspect active parent process trees, terminate suspicious execution threads, and audit endpoint user accounts.
+
+---
+
+## Detection Scenario 2: Network Authentication Brute-Force (Ncrack/Hydra -> Windows)
+
+### 1. Attack Execution (Kali Linux)
+* **MITRE ATT&CK Technique:** T1110 - Brute Force
+* **Description:** Executed automated credential cracking against SMB on the target endpoint using a custom wordlist from Kali Linux.
+**Command:**
+```bash
+ncrack -U pass.txt -P pass.txt 192.168.7.131:445 -p smb
+```
+
+### 2. Custom Detection Rule Engineering
+
+Implemented a custom correlation threshold rule in /var/ossec/etc/rules/local_rules.xml to aggregate rapid Windows Event ID 4625 (Failed Logon) telemetry within a strict timeframe:
+
+```<group name="windows,authentication_failed,">
+  <rule id="100003" level="10" frequency="3" timeframe="60">
+    <if_matched_sid>60122</if_matched_sid> <!-- Windows Event ID 4625: Logon Failure -->
+    <description>SOC Lab: Multiple Windows Failed Logons (Possible Brute-Force)</description>
+    <mitre>
+      <id>T1110</id>
+    </mitre>
+  </rule>
+</group>
+```
+### 3. Alert Verification & Dashboard Evidence
+
+The attack threshold was met within 60 seconds, triggering an immediate Level 10 (High Severity) correlation alert in the Wazuh SIEM dashboard.
+
+![Wazuh Custom Alert 100003](bruteforce-alert.png)
+
+* **Triggered Rule ID: 100003
+
+* **Alert Level: 10 (High Severity Authentication Attack)
+
+* **Target Host: DESKTOP-KP360KO (192.168.7.131)
+
+* **Attacker IP: 192.168.7.132 (Kali Linux)
+
+
+### 4. SOC Analyst Response Playbook
+
+** *Triage & Investigation: Inspect raw JSON logs to verify target username and confirm the source IP (192.168.7.132). Cross-reference time window for any subsequent successful logons (Event ID 4624) from the same source IP indicating a breached account.
+
+** *Containment: Temporarily isolate the victim host via Wazuh agent controls or block traffic from the attacking IP address using host firewalls or Active Response.
+
+** *Remediation: Enforce strong password complexity, implement Group Policy account lockout thresholds, and restrict open internal SMB/RDP ports behind network segmentation.
