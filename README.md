@@ -84,11 +84,18 @@ After restarting the wazuh-manager service, running whoami /all on the target en
 
 ### 1. Attack Execution (Kali Linux)
 * **MITRE ATT&CK Technique:** T1110 - Brute Force
-* **Description:** Executed automated credential cracking against SMB on the target endpoint using a custom wordlist from Kali Linux.
+* **Description:** Executed automated NTLM credential validation attempts against SMB on the target endpoint using Python and Impacket to simulate rapid network authentication failure.
 **Command:**
 ```bash
-ncrack -U pass.txt -P pass.txt 192.168.7.131:445 -p smb
-```
+python3 -c '
+from impacket.smbconnection import SMBConnection
+target = "192.168.7.131"
+for i in range(5):
+    try:
+        conn = SMBConnection(target, target, timeout=2)
+        conn.login(f"user{i}", f"wrongpass{i}")
+    except: pass
+'```
 
 ### 2. Custom Detection Rule Engineering
 
@@ -108,7 +115,7 @@ Implemented a custom correlation threshold rule in /var/ossec/etc/rules/local_ru
 
 The attack threshold was met within 60 seconds, triggering an immediate Level 10 (High Severity) correlation alert in the Wazuh SIEM dashboard.
 
-![Wazuh Custom Alert 100003](bruteforce-alert.png)
+![Wazuh Custom Alert 100003](brute-force-alert.png)
 
 * **Triggered Rule ID: 100003
 
@@ -126,3 +133,42 @@ The attack threshold was met within 60 seconds, triggering an immediate Level 10
 ** *Containment: Temporarily isolate the victim host via Wazuh agent controls or block traffic from the attacking IP address using host firewalls or Active Response.
 
 ** *Remediation: Enforce strong password complexity, implement Group Policy account lockout thresholds, and restrict open internal SMB/RDP ports behind network segmentation.
+---
+
+## Active Response Scenario: Automated Threat Containment
+
+### 1. Active Response Workflow
+* **Trigger Event:** High-Frequency Authentication Failure Threshold (Rule `100003`)
+* **Response Action:** Dynamic IP Containment via Windows Firewall (`netsh.exe`)
+* **Block Duration:** 10-Minute Dynamic Block (`timeout: 600s`)
+
+### 2. Active Response Configuration (`/var/ossec/etc/ossec.conf`)
+```xml
+<command>
+  <name>netsh</name>
+  <executable>netsh.exe</executable>
+  <expect>srcip</expect>
+  <timeout_allowed>yes</timeout_allowed>
+</command>
+
+<active-response>
+  <command>netsh</command>
+  <location>local</location>
+  <rules_id>100003</rules_id>
+  <timeout>600</timeout>
+</active-response>
+```
+
+### 3. Active Response Workflow
+Upon detecting rapid credential brute-force attempts from Kali Linux (192.168.7.132), the Wazuh Manager issued an automated Active Response command to the Windows agent. The agent executed netsh.exe to inject a dynamic inbound drop rule into Windows Firewall.
+
+* **Target Host: DESKTOP-KP360KO (192.168.7.131)
+
+* **Contained Attacker IP: 192.168.7.132 (100% ICMP Packet Loss Verified)
+
+* **Result: Attack vector neutralized automatically without requiring manual SOC operator intervention, drastically lowering Mean Time to Respond (MTTR).
+
+### Section Structure Overview
+* **`## Detection Scenario 1`** (Manual Lock-screen Attempts)
+* **`## Detection Scenario 2`** (Network SMB Brute-Force)
+* **`## Active Response Scenario`** (Automated Firewall Containment)
