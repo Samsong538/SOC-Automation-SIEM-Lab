@@ -11,7 +11,7 @@ This project demonstrates the end-to-end deployment of a 3-tier Security Operati
 * **Attacker Machine:** Kali Linux (IP: 192.168.7.132)
 * **Network Mode:** VMware NAT Subnet (192.168.7.0/24)
 
----## Phase 2: Telemetry & Ingestion Verification
+## Phase 2: Telemetry & Ingestion Verification
 
 Before engineering custom rules, end-to-end log ingestion was verified to ensure the Wazuh Agent on the Windows 10 target (`192.168.7.131`) was actively forwarding Sysmon operational logs to the manager over TCP port `1514`.
 
